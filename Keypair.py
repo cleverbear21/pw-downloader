@@ -5,6 +5,13 @@ import re
 import sys
 
 
+def get_base_dir():
+    """Returns the executable folder path when compiled, or script folder path when uncompiled."""
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
 def base64url_decode(input_str):
     """Adds padding if missing and decodes base64url string."""
     rem = len(input_str) % 4
@@ -14,11 +21,10 @@ def base64url_decode(input_str):
 
 
 def extract_and_save_keys(log_text):
-    # Determine the current directory where this script file is stored
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    output_file = os.path.join(script_dir, "keypair.txt")
+    # Determine the directory where the .exe or script resides
+    base_dir = get_base_dir()
+    output_file = os.path.join(base_dir, "keypair.txt")
 
-    # Fixed Regex: Escaped the hyphen (\-) inside the character set
     pattern = r"MediaKeySession\.update\(Uint8Array instance \[\s*([A-Za-z0-9_=\-\s]+?)\s*\]\)"
     matches = re.findall(pattern, log_text, re.S)
 
@@ -29,7 +35,6 @@ def extract_and_save_keys(log_text):
     key_pairs = []
 
     for raw_payload in matches:
-        # Strip all newlines and spaces inside the base64 string
         b64_payload = re.sub(r"\s+", "", raw_payload)
 
         try:
@@ -52,7 +57,6 @@ def extract_and_save_keys(log_text):
         print("\nNo valid keys could be decoded.")
         return
 
-    # Write output directly to keypair.txt in the script's folder
     with open(output_file, "w", encoding="utf-8") as f:
         for pair in key_pairs:
             f.write(f"{pair}\n")

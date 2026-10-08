@@ -1,18 +1,27 @@
 import os
 import subprocess
+import sys
+
+
+def get_base_dir():
+    """Returns the executable folder path when compiled, or script folder path when uncompiled."""
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
 
 
 def run_downloader():
-    # 1. Locate keypair.txt in the same directory as this script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    keypair_path = os.path.join(script_dir, "keypair.txt")
+    base_dir = get_base_dir()
+
+    # Locate keypair.txt in the same directory as the executable
+    keypair_path = os.path.join(base_dir, "keypair.txt")
 
     if not os.path.exists(keypair_path):
         print(f"Error: Could not find '{keypair_path}'.")
-        print("Please run your key extractor script first to generate keypair.txt.")
+        print("Please run your key extractor executable first to generate keypair.txt.")
         return
 
-    # 2. Read key pair from keypair.txt
+    # Read key pair from keypair.txt
     with open(keypair_path, "r", encoding="utf-8") as f:
         keys = [line.strip() for line in f if line.strip()]
 
@@ -20,18 +29,24 @@ def run_downloader():
         print(f"Error: '{keypair_path}' is empty.")
         return
 
-    key_pair = keys[0]  # Uses the first key pair found in keypair.txt
+    key_pair = keys[0]
     print(f"Loaded Key Pair: {key_pair}")
 
-    # 3. Prompt user for MPD URL
     stream_url = input("\nPaste MPD URL: ").strip()
     if not stream_url:
         print("Error: No URL provided.")
         return
 
-    # 4. Construct command explicitly using .\N_m3u8DL-RE.exe
+    # Path to N_m3u8DL-RE.exe located in the same directory
+    downloader_exe = os.path.join(base_dir, "N_m3u8DL-RE.exe")
+
+    if not os.path.exists(downloader_exe):
+        print(f"\nError: '{downloader_exe}' was not found.")
+        print("Ensure N_m3u8DL-RE.exe is placed in the same directory as this tool.")
+        return
+
     cmd = [
-        r".\N_m3u8DL-RE.exe",
+        downloader_exe,
         stream_url,
         "-H", "Accept: */*",
         "-H", "DNT: 1",
@@ -44,13 +59,9 @@ def run_downloader():
         "-M", "format=mkv",
     ]
 
-    # 5. Execute command
     print("\nStarting download...\n")
     try:
         subprocess.run(cmd, check=True)
-    except FileNotFoundError:
-        print("\nError: '.\\N_m3u8DL-RE.exe' was not found in the current folder.")
-        print("Ensure N_m3u8DL-RE.exe is placed directly in the same directory as this script.")
     except subprocess.CalledProcessError as e:
         print(f"\nDownload failed with exit code: {e.returncode}")
 
