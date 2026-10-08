@@ -1,7 +1,7 @@
 # pw-downloader
 ## Prerequisites
 ### [Eme logger extension from chrome webstore](https://chromewebstore.google.com/detail/eme-call-and-event-logger/cniohcjecdcdhgmlofniddfoeokbpbpb)
-### Files from [releases](https://github.com/cleverbear21/pw-downloader/releases)
+### Files from [releases](https://github.com/cleverbear21/pw-downloader/releases) Download pw-downloader.zip only
 ### A windows pc/laptop
 ### Chrome
 ## TUTORIAL
